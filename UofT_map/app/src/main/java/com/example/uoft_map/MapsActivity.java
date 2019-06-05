@@ -19,10 +19,8 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -31,6 +29,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 
 
 public class MapsActivity extends FragmentActivity implements
+
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
@@ -54,10 +53,8 @@ public class MapsActivity extends FragmentActivity implements
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            checkUserLocationPermission();
-        }
+        checkLocationPermission();
+
     }
 
     /**
@@ -73,22 +70,37 @@ public class MapsActivity extends FragmentActivity implements
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         //get current location
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+
+        //Initialize Google Play Services
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
         {
 
             buildGoogleApiClient();
-
+            mMap.setMyLocationEnabled(true);
+        }
+        else {
+            buildGoogleApiClient();
             mMap.setMyLocationEnabled(true);
         }
 
     }
 
-        /*
-        // Add a marker in UofT and move the camera
-        LatLng campus = new LatLng(43.6629, -79.3957);
-        mMap.addMarker(new MarkerOptions().position(campus).title("Marker in UofT St. George"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(campus));
-        */
+    // Create a new client
+    protected synchronized void buildGoogleApiClient()
+    {
+
+        googleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+
+        googleApiClient.connect();
+
+
+    }
+
 
     public void getCurrentLocation() {
         mMap.clear();
@@ -96,35 +108,77 @@ public class MapsActivity extends FragmentActivity implements
         {
             //Creating a location object
             return ;}
-        Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-        if (location != null) {
+        Location currentUserLocationMarker = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+        if (currentUserLocationMarker != null) {
             //Getting longitude and latitude
-            LatLng campus = new LatLng(location.getLatitude(), location.getLongitude());
+            LatLng curr = new LatLng(currentUserLocationMarker.getLatitude(), currentUserLocationMarker.getLongitude());
 
             //moving the map to location
-            mMap.addMarker(new MarkerOptions().position(campus).title("Marker in UofT St. George"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(campus));
+            mMap.addMarker(new MarkerOptions().position(curr).title("Current Location"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(curr));
         }
     }
 
-    public boolean checkUserLocationPermission()
+    @Override
+    public void onLocationChanged(Location location)
     {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+        lastLocation = location;
+
+        // Delete previous Marker
+        if(currentUserLocationMarker != null)
         {
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION))
-            {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Request_User_Location_Code);
-            }
-            else
-            {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, Request_User_Location_Code);
-            }
-            // user select don't ask permission when previously asked
-            return false;
+            currentUserLocationMarker.remove();
         }
-        else
+
+        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
+
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(latLng);
+        markerOptions.title("You R Here");
+        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
+
+        currentUserLocationMarker = mMap.addMarker(markerOptions);
+
+        // camara move
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.animateCamera(CameraUpdateFactory.zoomTo(12));
+
+
+
+        if (googleApiClient != null)
         {
-            // if permission is asked previously and user denied
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        }
+
+
+    }
+    public boolean checkLocationPermission(){
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            // Asking user if explanation is needed
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+
+                // Show an expanation to the user *asynchronously* -- don't block
+                // this thread waiting for the user's response! After the user
+                // sees the explanation, try again to request the permission.
+
+                //Prompt the user once explanation has been shown
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        Request_User_Location_Code);
+
+
+            } else {
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        Request_User_Location_Code);
+            }
+            return false;
+        } else {
             return true;
         }
     }
@@ -149,60 +203,12 @@ public class MapsActivity extends FragmentActivity implements
                 else{
                     Toast.makeText(this,"TAT...Permission denied",Toast.LENGTH_SHORT).show();
                 }
+                return;
         }
 
 
     }
 
-// Create a new client
-    protected synchronized void buildGoogleApiClient()
-    {
-
-        googleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-
-        googleApiClient.connect();
-
-
-    }
-
-
-
-    @Override
-    public void onLocationChanged(Location location)
-    {
-        lastLocation = location;
-
-        // Delete previous Marker
-        if(currentUserLocationMarker != null)
-        {
-            currentUserLocationMarker.remove();
-        }
-
-        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-
-        MarkerOptions markerOptions = new MarkerOptions();
-        markerOptions.position(latLng);
-        markerOptions.title("User Current Location");
-        markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED));
-
-        currentUserLocationMarker = mMap.addMarker(markerOptions);
-
-        // camara move
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        mMap.animateCamera(CameraUpdateFactory.zoomBy(14));
-
-
-        if (googleApiClient != null)
-        {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-        }
-
-
-    }
 
 
     // whenever it's connceted
@@ -213,11 +219,11 @@ public class MapsActivity extends FragmentActivity implements
         locationRequest.setInterval(1100);
         locationRequest.setFastestInterval(1100);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        getCurrentLocation();
-        /*if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-        {
 
-        }*/
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+        {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
+        }
     }
 
     @Override
