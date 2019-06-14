@@ -1,0 +1,4 @@
+#Fri Jun 14 14:35:30 EDT 2019
+base.0=C\:\\Users\\Owner\\Desktop\\Study\\ADA\\UofT_map\\UofT_map\\app\\build\\intermediates\\transforms\\dexMerger\\debug\\0
+path.0=classes.dex
+renamed.0=classes.dex
