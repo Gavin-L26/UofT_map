@@ -6,6 +6,10 @@
           <option name="url" value="https://markus.teach.cs.toronto.edu/git/csc207-2019-09/zhuqi10" />
           <option name="userName" value="" />
         </UrlAndUserName>
+        <UrlAndUserName>
+          <option name="url" value="http://markus.teach.cs.toronto.edu" />
+          <option name="userName" value="zhuqi10" />
+        </UrlAndUserName>
       </list>
     </option>
     <option name="cloneParentDir" value="C:\Users\Owner\Desktop\Study\University\3rd\CSC207" />
