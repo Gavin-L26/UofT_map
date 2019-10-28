@@ -30,6 +30,10 @@
           <option name="url" value="https://github.com/palinpaalin/timetable.git" />
           <option name="userName" value="" />
         </UrlAndUserName>
+        <UrlAndUserName>
+          <option name="url" value="https://github.com/KKyInGG/Andriod-Game.git" />
+          <option name="userName" value="" />
+        </UrlAndUserName>
       </list>
     </option>
     <option name="cloneParentDir" value="C:\Users\Owner\Desktop\Study\University\3rd\CSC207" />
