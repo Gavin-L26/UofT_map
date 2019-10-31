@@ -34,6 +34,14 @@
           <option name="url" value="https://github.com/KKyInGG/Andriod-Game.git" />
           <option name="userName" value="" />
         </UrlAndUserName>
+        <UrlAndUserName>
+          <option name="url" value="https://github.com/codingchili/halloween-memory.git" />
+          <option name="userName" value="" />
+        </UrlAndUserName>
+        <UrlAndUserName>
+          <option name="url" value="https://github.com/UPRM-Advanced-Programming-Course/PokerMemory.git" />
+          <option name="userName" value="" />
+        </UrlAndUserName>
       </list>
     </option>
     <option name="cloneParentDir" value="C:\Users\Owner\Desktop\Study\University\3rd\CSC207" />
